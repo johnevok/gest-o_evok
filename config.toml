@@ -1,0 +1,8 @@
+# Tema escuro forçado: evita texto claro sobre fundo branco em menus, calendário e alertas
+[theme]
+base = "dark"
+primaryColor = "#c9d4b8"
+backgroundColor = "#0f110d"
+secondaryBackgroundColor = "#151912"
+textColor = "#f0e5c8"
+font = "sans serif"

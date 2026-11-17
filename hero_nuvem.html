@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>ArquiPlanner</title>
+<meta name="description" content="Retrato em nuvem de pontos feito de 66.000 pontos. Mova a luz.">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"}}</script>
+<style>
+@font-face{font-family:"Geist";src:url(https://fonts.gstatic.com/s/geist/v5/gyByhwUxId8gMEwcGFU.woff2) format("woff2");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Geist Mono";src:url(https://fonts.gstatic.com/s/geistmono/v6/or3nQ6H-1_WfwkMZI_qYFrcdmg.woff2) format("woff2");font-weight:100 900;font-display:swap}
+@font-face{font-family:"Instrument Serif";src:url(https://fonts.gstatic.com/s/instrumentserif/v5/jizBRFtNs2ka5fXjeivQ4LroWlx-6zUTjg.woff2) format("woff2");font-weight:400;font-display:swap}
+:root{--color-night:#0f110d;--color-paper:#f0e5c8;--color-dots:#c9d4b8;--color-tech:#7fa8a3;--color-muted:#7f8a6a;--color-surface:#fff;--color-ink:#111;--color-line:#1111111a;
+--font-sans:"Geist",ui-sans-serif,system-ui,sans-serif;--font-mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;--font-serif:"Instrument Serif",Georgia,"Times New Roman",serif}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--color-night)}
+body{font-family:var(--font-sans);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+.page{position:fixed;inset:0;overflow:hidden;background:var(--color-night);color:var(--color-paper);cursor:crosshair;touch-action:none}
+.page[data-phase=ready]{cursor:none}
+.page::after{content:"";position:absolute;inset:0;pointer-events:none;filter:invert(1);opacity:.05;
+background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1.7 -.6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.stage{position:absolute;inset:0}
+.stage canvas{width:100%;height:100%;display:block}
+.loader{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;transition:opacity .5s .15s}
+.page[data-phase=ready] .loader{opacity:0}
+.ring{position:absolute;top:50%;left:50%;width:220px;height:220px;translate:-50% -50%;overflow:visible}
+.ring circle{fill:color-mix(in srgb,var(--color-paper) 18%,transparent);r:1.6px;transition:fill .25s,r .25s}
+.ring circle[data-on]{fill:var(--color-paper);r:2.2px}
+.counter{position:absolute;top:50%;left:50%;translate:-50% -60%;font:34px/1 var(--font-mono);letter-spacing:.02em;font-variant-numeric:tabular-nums;white-space:nowrap}
+.label{position:absolute;top:50%;left:50%;translate:-50% 26px;font:11px/1 var(--font-mono);text-transform:uppercase;letter-spacing:.12em;opacity:.5;white-space:nowrap}
+.logo,h1,.tag,.hint{position:absolute;margin:0;opacity:0;transition:opacity .9s cubic-bezier(.22,1,.36,1),translate .9s cubic-bezier(.22,1,.36,1)}
+h1,.tag{font:400 clamp(17px,1.6vw,24px)/1.2 var(--font-sans);letter-spacing:-.01em;top:50%;translate:0 calc(10px - 50%)}
+h1{left:clamp(20px,4vw,64px)}
+.tag{right:clamp(20px,4vw,64px);color:var(--color-muted);transition-delay:.12s}
+.logo{font:26px/1 var(--font-serif);color:inherit;text-decoration:none;top:20px;left:clamp(20px,4vw,64px)}
+.hint{font:11px/1 var(--font-mono);text-transform:uppercase;letter-spacing:.12em;white-space:nowrap;bottom:22px;left:50%;translate:-50% 10px;transition-delay:.5s}
+.page[data-phase=ready] h1,.page[data-phase=ready] .tag{opacity:1;translate:0 -50%}
+.page[data-phase=ready] .logo{opacity:.9;pointer-events:auto}
+.logo:hover,.logo:focus-visible{opacity:1!important;text-decoration:underline;text-underline-offset:4px}
+.page[data-phase=ready] .hint{opacity:.45;translate:-50% 0}
+.pill{position:fixed;bottom:20px;left:20px;z-index:7;background:var(--color-surface);color:var(--color-ink);font:12px/1 var(--font-mono);letter-spacing:.04em;padding:8px 12px;border-radius:6px;text-decoration:none;box-shadow:0 0 0 1px var(--color-line),0 10px 24px -12px #0006;animation:pillIn .6s cubic-bezier(.22,1,.36,1) 4s both}
+@keyframes pillIn{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:none}}
+@media(max-width:700px){h1,.tag{font-size:16px;top:72px;translate:0 10px}.page[data-phase=ready] h1,.page[data-phase=ready] .tag{translate:0 0}.hint{bottom:60px}}
+@media(max-width:600px){.pill{padding:6px 9px;font-size:11px;bottom:12px;left:auto;right:12px}}
+@media(prefers-reduced-motion:reduce){.loader,.logo,h1,.tag,.hint{transition:none}.pill{animation:none}}
+</style>
+</head>
+<body>
+<main class="page" data-phase="loading">
+<div class="stage" aria-hidden="true"></div>
+<div class="loader" role="progressbar" aria-label="Carregando os pontos" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+<svg class="ring" viewBox="-110 -110 220 220"></svg><span class="counter">000</span><span class="label">66.000 pontos</span>
+</div>
+<span class="logo">ArquiPlanner.</span>
+<h1>__NOME__</h1>
+<p class="tag">__TAG__</p>
+<p class="hint">__HINT__</p>
+</main>
+<script type="module">
+import * as THREE from 'three';
+THREE.ColorManagement.enabled=false;
+const $=s=>document.querySelector(s),page=$('.page'),stage=$('.stage'),counter=$('.counter'),label=$('.label'),loader=$('.loader'),ring=$('.ring');
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches,N=66000,dpr=Math.min(devicePixelRatio||1,2),R=Math.random;
+const rdots=[];
+for(let i=0;i<96;i++){const a=i/96*Math.PI*2-Math.PI/2,c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+c.setAttribute('cx',(92*Math.cos(a)).toFixed(2));c.setAttribute('cy',(92*Math.sin(a)).toFixed(2));c.setAttribute('r','1.6');ring.appendChild(c);rdots.push(c)}
+function setProgress(p){const v=Math.round(p*100);counter.textContent=String(v).padStart(3,'0');loader.setAttribute('aria-valuenow',v);rdots.forEach((c,i)=>c.toggleAttribute('data-on',i/96<p))}
+const tick=()=>new Promise(r=>setTimeout(r));
+const VISOR=true; // false = sem visor (rosto inteiro, com olhos esculpidos)
+// Cabeça masculina procedural, só rosto (unidades do modelo: y 0 = queixo, 0.70 = topo do crânio).
+async function generate(){
+const M=N*5,P=new Float32Array(M*3),Nn=new Float32Array(M*3);let k=0,lp=0;
+const TAU=6.2831853,sm=(a,b,x)=>{const t=Math.max(0,Math.min(1,(x-a)/(b-a)));return t*t*(3-2*t)},G=(a,b)=>Math.exp(-(a*a+b*b));
+const add=(p,n)=>{const l=Math.hypot(n[0],n[1],n[2])||1;P[k*3]=p[0];P[k*3+1]=p[1];P[k*3+2]=p[2];Nn[k*3]=n[0]/l;Nn[k*3+1]=n[1]/l;Nn[k*3+2]=n[2]/l;k++};
+const pp=async()=>{if(k-lp>=20000){lp=k;setProgress(.6*k/M);await tick()}};
+// perfil lateral: meia-largura, frente e fundo por altura (interpolação cúbica)
+const KY=[0,.02,.05,.10,.20,.30,.40,.50],KA=[0,.07,.115,.15,.188,.208,.222,.225],KF=[0,.13,.215,.235,.235,.24,.25,.258],KB=[0,.06,.12,.17,.22,.255,.27,.275];
+const herm=(V,y)=>{const n=KY.length;if(y<=KY[0])return V[0];if(y>=KY[n-1])return V[n-1];let i=0;while(y>KY[i+1])i++;
+const h=KY[i+1]-KY[i],t=(y-KY[i])/h,m0=i>0?(V[i+1]-V[i-1])/(KY[i+1]-KY[i-1]):(V[1]-V[0])/h,m1=i<n-2?(V[i+2]-V[i])/(KY[i+2]-KY[i]):(V[n-1]-V[n-2])/h,t2=t*t,t3=t2*t;
+return(2*t3-3*t2+1)*V[i]+(t3-2*t2+t)*h*m0+(-2*t3+3*t2)*V[i+1]+(t3-t2)*h*m1};
+const sup=(c,e)=>Math.sign(c)*Math.pow(Math.abs(c),e);
+const base=(ph,y)=>{let a=herm(KA,y),f=herm(KF,y),b=herm(KB,y);if(y>.5){const t=(y-.5)/.2,s=Math.sqrt(Math.max(0,1-t*t));a*=s;f*=s;b*=s}
+const e=2/(2+.3*sm(.30,.08,y)),sn=Math.sin(ph),c=Math.cos(ph);return[a*sup(sn,e),y,(c>=0?f:b)*sup(c,e)]};
+// relevos do rosto (deslocamento em z): sobrancelha, olhos, nariz, maçãs, lábios, queixo
+const bump=(x,y,c)=>{const ax=Math.abs(x),fw=sm(.15,.5,c);if(fw<=0)return 0;let z=0;
+z+=.026*G(0,(y-.392)/.024)*sm(.17,.10,ax)+.010*G(x/.03,(y-.375)/.02)-.02*G((ax-.085)/.045,(y-.345)/.03);
+if(!VISOR)z+=.008*G((ax-.085)/.028,(y-.34)/.011)+.005*G((ax-.085)/.032,(y-.358)/.008);
+const aN=.01+.075*sm(.37,.24,y),sg=.018+.012*sm(.36,.23,y);
+z+=aN*G(x/sg,0)*sm(.19,.225,y)*sm(.40,.36,y)+.034*G(x/.022,(y-.245)/.017)+.03*G((ax-.04)/.015,(y-.234)/.016);
+z+=-.008*G(x/.012,(y-.19)/.02)-.012*G((ax-.07)/.012,(y-.19)/.04)+.022*G((ax-.14)/.055,(y-.275)/.045)-.02*G((ax-.12)/.05,(y-.17)/.05)-.012*G((ax-.19)/.04,(y-.45)/.07);
+z+=.026*G(x/.058,(y-.187)/.013)+.032*G(x/.052,(y-.124)/.016)-.014*G(x/.06,(y-.155)/.005)-.01*G((ax-.07)/.012,(y-.15)/.01)+.03*G(x/.075,(y-.048)/.035)-.018*G(x/.05,(y-.093)/.012);
+return z*fw};
+const skin=(ph,y)=>{const b=base(ph,y);b[2]+=bump(b[0],y,Math.cos(ph));return b};
+const nrm=(F,ph,y)=>{const e1=.004,e2=.002,p=F(ph,y),a=F(ph+e1,y),b=F(ph,y+e2),u=[a[0]-p[0],a[1]-p[1],a[2]-p[2]],v=[b[0]-p[0],b[1]-p[1],b[2]-p[2]];
+return[u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]]};
+// cabelo curto e bagunçado
+const hl=x=>.535+.04*sm(.08,.2,Math.abs(x))-.016*G(x/.05,0);
+const isHair=(ph,y)=>{const c=Math.cos(ph),s=Math.sin(ph);if(y>hl(.22*s))return true;if(c<-.3)return y>.11;if(c<.1)return y>.40;return Math.abs(s)>.86&&y>.27};
+const hair=(ph,y)=>{const b=base(ph,y),n=nrm(base,ph,y),l=Math.hypot(n[0],n[1],n[2])||1,c=Math.cos(ph),
+tuft=.5+.5*Math.sin(9*ph+17*y)*Math.sin(7*ph-13*y+1.7),th=.012+.05*sm(.45,.68,y)+.032*tuft*sm(.42,.62,y)+.014*sm(.3,.42,y)*(1-sm(.45,.6,y))*Math.abs(Math.sin(ph));
+return[b[0]+n[0]/l*th,b[1]+n[1]/l*th+.035*sm(.6,.7,y),b[2]+n[2]/l*th+.07*sm(.52,.68,y)*sm(-.2,.8,c)]};
+const rp=()=>{const ph=R()*TAU,y=R()*.7,sn=Math.sin(ph),c=Math.cos(ph),a=herm(KA,Math.min(y,.5)),f=herm(KF,Math.min(y,.5)),b=herm(KB,Math.min(y,.5));
+const s=y>.5?Math.sqrt(Math.max(0,1-((y-.5)/.2)**2)):1,A=a*s,F=f*s,B=b*s;
+if(R()>(A+.5*(F+B))/.5||R()>Math.hypot(A*c,(c>=0?F:B)*sn)/Math.max(A,F,B,1e-6)||(c<-.2&&R()<.65))return null;return[ph,y]};
+let n=0;
+while(n<150000){await pp();const q=rp();if(!q||isHair(q[0],q[1]))continue;const[ph,y]=q,p=skin(ph,y),nn=nrm(skin,ph,y),l=Math.hypot(nn[0],nn[1],nn[2])||1,
+st=(y<.30&&Math.cos(ph)>-.1)?(y>.105&&y<.205&&Math.abs(p[0])<.07?.003:.0055):.002,j=(R()-.5)*st;
+add([p[0]+nn[0]/l*j,p[1]+nn[1]/l*j,p[2]+nn[2]/l*j],nn);n++}
+while(k<M-8000-260*12){await pp();const q=rp();if(!q||!isHair(q[0],q[1]))continue;const[ph,y]=q,p=hair(ph,y),nn=nrm(hair,ph,y),l=Math.hypot(nn[0],nn[1],nn[2])||1,j=(R()-.5)*.007;
+add([p[0]+nn[0]/l*j,p[1]+nn[1]/l*j,p[2]+nn[2]/l*j],nn)}
+for(let i=0;i<8000;i++){const s=R()<.5?-1:1,[a,b,c]=(()=>{const dy=R()*2-1,f=Math.sqrt(1-dy*dy),p=R()*TAU;return[f*Math.cos(p),dy,f*Math.sin(p)]})(),ex=.026,ey=.054,ez=.034;
+add([s*(.222+ex*Math.abs(a)),.325+ey*b,-.045+ez*c],[s*Math.abs(a)/ex,b/ey,c/ez])}
+// fios soltos de cabelo
+for(let i=0;i<260;i++){let q;do{q=[R()*TAU,.52+R()*.18]}while(!isHair(q[0],q[1])||Math.cos(q[0])<-.5);const[ph,y]=q,p=hair(ph,y),nn=nrm(hair,ph,y),l=Math.hypot(nn[0],nn[1],nn[2])||1,
+d=[nn[0]/l*.6+(R()-.5)*.5,.5+R()*.4,nn[2]/l*.6+(R()-.5)*.5+.15],L=.03+.05*R();
+for(let t=0;t<12;t++){const s=t/11;add([p[0]+d[0]*L*s,p[1]+d[1]*L*s-.05*L*s*s,p[2]+d[2]*L*s],nn)}}
+while(k<M){await pp();const q=rp();if(!q||!isHair(q[0],q[1]))continue;const[ph,y]=q,p=hair(ph,y),nn=nrm(hair,ph,y);add(p,nn)}
+return{P,Nn,M,LS:M}}
+
+async function build(P,Nn,M,LS){
+const K=(a,b,c)=>((a+512)*1024+(b+512))*1024+c+512;
+// visor
+const hm=new Map(),hk=(a,b)=>(a+100)*1000+b;
+for(let i=0;i<M;i++){const x=P[i*3],y=P[i*3+1],z=P[i*3+2];if(Nn[i*3+2]>=.2&&Math.abs(x)<=.32&&y>=.2&&y<=.45){const k=hk(Math.floor(x/.01),Math.floor(y/.01));if(!(hm.get(k)>=z))hm.set(k,z)}}
+const fh=(x,y)=>{const ci=Math.floor(x/.01),cj=Math.floor(y/.01);let m=-Infinity;for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){const z=hm.get(hk(ci+a,cj+b));if(z!==undefined&&z>m)m=z}return m};
+const W=.215,clr=.028,top=x=>.378-.022*(x/W)**2,low=x=>.282+.032*Math.exp(-((x/.034)**2))+.026*(x/W)**4;
+let front=-Infinity;for(let x=-.06;x<=.0601;x+=.01)for(let y=.3;y<=.3601;y+=.01)front=Math.max(front,fh(x,y));
+front=isFinite(front)?front+clr:.35;
+let wrap=Infinity;
+for(let x=-W;x<=W+1e-9;x+=.01){if(Math.abs(x)<.05)continue;let nd=-Infinity;for(let y=low(x);y<=top(x);y+=.005)nd=Math.max(nd,fh(x,y));
+if(isFinite(nd))wrap=Math.min(wrap,(front-nd-.7*clr)/(x*x))}
+if(!isFinite(wrap)||wrap<=0)wrap=2.4;
+const lz=x=>front-wrap*x*x,j=()=>(R()-.5)*.004;
+// final arrays
+const pos=new Float32Array(N*3),nor=new Float32Array(N*3),part=new Float32Array(N);let k=0;
+const put=(x,y,z,nx,ny,nz,p)=>{pos[k*3]=x;pos[k*3+1]=y;pos[k*3+2]=z;nor[k*3]=nx;nor[k*3+1]=ny;nor[k*3+2]=nz;part[k++]=p};
+const copy=(i,p)=>put(P[i*3],P[i*3+1],P[i*3+2],Nn[i*3],Nn[i*3+1],Nn[i*3+2],p);
+const leaf=[],rest=[];
+for(let i=0;i<M;i++)(i>=LS?leaf:rest).push(i);
+const VIS=VISOR?950+380+140+1500+140:0,leafKeep=Math.min(Math.floor(leaf.length*.6),N-VIS-1000),need=N-VIS-leafKeep;
+const vox=i=>K(Math.floor(P[i*3]/.014),Math.floor(P[i*3+1]/.014),Math.floor(P[i*3+2]/.014));
+const cnt=new Map();for(const i of rest){const q=vox(i);cnt.set(q,(cnt.get(q)||0)+1)}
+const cv=[...cnt.values()],mx=Math.max(...cv);let cap=1;
+for(;cap<mx;cap++){let s=0;for(const c of cv)s+=Math.min(c,cap);if(s>=1.8*need)break}
+const used=new Map(),pool=[];for(const i of rest){const q=vox(i),u=used.get(q)||0;if(u<cap){pool.push(i);used.set(q,u+1)}}
+for(let i=pool.length-1;i>0;i--){const r=Math.floor(R()*(i+1));[pool[i],pool[r]]=[pool[r],pool[i]]}
+for(let i=0;i<need;i++)copy(i<pool.length?pool[i]:rest[Math.floor(R()*rest.length)],0);setProgress(.7);await tick();
+for(let i=0;i<leafKeep;i++)copy(leaf[i],2);
+if(VISOR){const nrmV=x=>{const nx=2*wrap*x,l=Math.hypot(nx,1);return[nx/l,0,1/l]};
+const vd=(x,y,zo,p)=>{const[a,b,c]=nrmV(x);put(x+j(),y+j(),lz(x)+zo+j(),a,b,c,p)};
+for(let i=0;i<950;i++){const x=(R()*2-1)*W;vd(x,top(x)-R()*R()*.016,.004,3)}
+for(let i=0;i<380;i++){const x=(R()*2-1)*W;vd(x,low(x),.002,3)}
+for(let s=-1;s<=1;s+=2){for(let i=0;i<70;i++){const x=s*W,l=low(x);vd(x,l+R()*(top(x)-l),0,3)}
+for(let i=0;i<70;i++){const t=R(),x=s*(W+.03*t),[a,b,c]=nrmV(s*W);put(x,top(W)-.008+j(),lz(s*W)-.15*t,a,b,c,3)}}
+for(let i=0;i<1500;i++){const x=(R()*2-1)*W,l=low(x);vd(x,l+R()*(top(x)-l),0,4)}}
+// shade
+const RR=.025,grid=new Map(),half=M>>1,gk=(a,b,c)=>K(a,b,c);
+for(let i=0;i<M;i+=2){const q=gk(Math.floor(P[i*3]/RR),Math.floor(P[i*3+1]/RR),Math.floor(P[i*3+2]/RR));let a=grid.get(q);if(!a)grid.set(q,a=[]);a.push(i)}
+const ridge=new Float32Array(N),counts=new Float32Array(N);
+for(let i=0;i<N;i++){if(i%5000===0){setProgress(.72+.27*i/N);await tick()}const x=pos[i*3],y=pos[i*3+1],z=pos[i*3+2],cx=Math.floor(x/RR),cy=Math.floor(y/RR),cz=Math.floor(z/RR);let c=0,sx=0,sy=0,sz=0;
+for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++)for(let d=-1;d<=1;d++){const l=grid.get(gk(cx+a,cy+b,cz+d));if(!l)continue;
+for(const q of l){const dx=P[q*3]-x,dy=P[q*3+1]-y,dz=P[q*3+2]-z;if(dx*dx+dy*dy+dz*dz<=RR*RR){c++;sx+=dx;sy+=dy;sz+=dz}}}
+counts[i]=c;ridge[i]=c?-((sx*nor[i*3]+sy*nor[i*3+1]+sz*nor[i*3+2])/c)/RR:0}
+const med=[...counts].sort((a,b)=>a-b)[N>>1]||1,ab=[...ridge].map(Math.abs).sort((a,b)=>a-b),p90=ab[Math.floor(N*.9)]||1;
+const shade=new Float32Array(N*2),rand=new Float32Array(N);let minX=Infinity,maxX=-Infinity;
+for(let i=0;i<N;i++){shade[i*2]=Math.max(-1,Math.min(1,ridge[i]/p90));shade[i*2+1]=Math.max(0,Math.min(1,1-counts[i]/(.55*med)));rand[i]=R();
+pos[i*3]*=4.6;pos[i*3+1]=(pos[i*3+1]-.375)*4.6-.15;pos[i*3+2]*=4.6;if(part[i]>0){minX=Math.min(minX,pos[i*3]);maxX=Math.max(maxX,pos[i*3])}}
+return{pos,nor,rand,shade,part,minX,maxX}}
+
+const VS=`uniform float uTime,uAssemble,uSize,uGlint,uShine,uRingRadius;uniform vec2 uHead;uniform vec3 uLight,uRingCenter;
+attribute float aRand,aPart;attribute vec2 aShade;varying float vB,vA,vLens,vGlint,vShine;
+mat3 rotY(float a){float c=cos(a),s=sin(a);return mat3(c,0.,-s,0.,1.,0.,s,0.,c);}
+mat3 rotX(float a){float c=cos(a),s=sin(a);return mat3(1.,0.,0.,0.,c,s,0.,-s,c);}
+void main(){
+vec3 home=position,n=normalize(normal);
+float head=1.;
+mat3 Rm=rotY(uHead.x*(.25+.75*head))*rotX(uHead.y*head);vec3 piv=vec3(0.,-2.,-.3);
+home=Rm*(home-piv)+piv;n=Rm*n;
+home+=n*sin(uTime*1.4+aRand*60.)*.006;
+float r2=fract(sin(aRand*91.7)*43758.5453);
+float t=clamp((uAssemble-aRand*.45)/.55,0.,1.);
+float e=t<.5?4.*t*t*t:1.-pow(-2.*t+2.,3.)/2.;
+float ang=aRand*6.2831853,rr=uRingRadius*(1.+(r2-.5)*.06);
+vec3 start=uRingCenter+vec3(cos(ang)*rr,sin(ang)*rr,0.);
+vec3 p=mix(start,home,e);
+p+=vec3(sin(aRand*40.+uTime*.3),cos(aRand*31.),.9+r2*1.4)*sin(e*3.14159265)*.45;
+vec3 tl=uLight-home;float lit=max(dot(n,normalize(tl)),0.)/(1.+dot(tl,tl)*.32);
+float key=max(dot(n,normalize(vec3(-.5,.6,.7))),0.);
+float facing=normalize(normalMatrix*n).z,rim=pow(1.-abs(facing),3.);
+float b=.3+key*.22+lit*1.5+rim*.14;
+b*=mix(.55,1.,smoothstep(-.3,.25,facing));
+float ridge=aShade.x,thin=aShade.y;
+b*=ridge>0.?1.+ridge*.7:1.+ridge*.5;
+b+=thin*(.26+key*.3);
+float leaf=step(1.5,aPart)*step(aPart,2.5),frame=step(2.5,aPart)*step(aPart,3.5),lens=step(3.5,aPart);
+b*=1.-.1*leaf;b*=mix(1.,.78,max(frame,lens));b*=mix(1.,.7,lens);
+b*=.7+r2*.5;
+float glint=(leaf+frame+lens)>.5?1.-smoothstep(0.,.09,abs(position.x-uGlint)):0.;
+b+=glint*1.2;
+float band=home.y-home.x*.5-uShine,shine=exp(-band*band*4.);
+b+=shine*1.3;
+vB=b;vA=mix(.75,1.,e);vLens=lens;vGlint=glint;vShine=shine;
+vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;
+gl_PointSize=uSize*(.45+r2*r2*1.3)*(1.+shine*.6)/-mv.z;}`;
+const FS=`uniform vec3 uInk,uBlue,uCream;varying float vB,vA,vLens,vGlint,vShine;
+void main(){float r=length(gl_PointCoord-.5);if(r>.5)discard;float a=exp(-16.*r*r)*vA;
+vec3 ink=mix(uInk,uCream,clamp(vShine*.6,0.,1.));ink=mix(ink,uBlue,.6*vLens);ink=mix(ink,uBlue,clamp(vGlint*.7,0.,1.));
+gl_FragColor=vec4(ink*vB*a,1.);}`;
+const LVS=`uniform vec3 uLight;uniform float uOn,uSize;void main(){vec4 mv=modelViewMatrix*vec4(uLight,1.);gl_Position=projectionMatrix*mv;gl_PointSize=uSize*uOn/-mv.z;}`;
+const LFS=`uniform float uOn;void main(){float r=2.*length(gl_PointCoord-.5);if(r>1.)discard;float core=1.-smoothstep(.08,.14,r),glow=exp(-4.*r)*.45+exp(-12.*r)*.7;gl_FragColor=vec4(vec3(core+glow)*uOn,1.);}`;
+const DVS=`uniform float uTime,uSize;attribute float aRand;varying float vR;
+void main(){vec3 p=position;p.y=mod(p.y+uTime*(.03+aRand*.05)+6.,12.)-6.;p.x+=sin(uTime*.2+aRand*40.)*.15;vR=aRand;
+vec4 mv=modelViewMatrix*vec4(p,1.);gl_Position=projectionMatrix*mv;gl_PointSize=uSize*(.5+aRand)/-mv.z;}`;
+const DFS=`uniform vec3 uInk;uniform float uOn;varying float vR;
+void main(){float r=length(gl_PointCoord-.5);if(r>.5)discard;gl_FragColor=vec4(uInk*(.1+vR*.18)*uOn*exp(-16.*r*r),1.);}`;
+
+function start(d){
+const renderer=new THREE.WebGLRenderer({antialias:false,powerPreference:'high-performance'});
+renderer.setPixelRatio(dpr);renderer.setClearColor(0x0f110d,1);stage.appendChild(renderer.domElement);
+const scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(30,1,.1,100),T15=Math.tan(Math.PI/12),target=new THREE.Vector3(0,-.15,0);
+const U={uTime:{value:0},uAssemble:{value:reduce?1:0},uSize:{value:26*dpr},uGlint:{value:-9},uShine:{value:99},uHead:{value:new THREE.Vector2()},uLight:{value:new THREE.Vector3(-1.4,1.2,1.6)},
+uRingCenter:{value:target.clone()},uRingRadius:{value:1},uInk:{value:new THREE.Color('#c9d4b8')},uBlue:{value:new THREE.Color('#7fa8a3')},uCream:{value:new THREE.Color('#f0e5c8')}};
+const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(d.pos,3));g.setAttribute('normal',new THREE.BufferAttribute(d.nor,3));
+g.setAttribute('aRand',new THREE.BufferAttribute(d.rand,1));g.setAttribute('aShade',new THREE.BufferAttribute(d.shade,2));g.setAttribute('aPart',new THREE.BufferAttribute(d.part,1));
+const base={transparent:true,depthWrite:false,blending:THREE.AdditiveBlending};
+const bust=new THREE.Points(g,new THREE.ShaderMaterial({...base,uniforms:U,vertexShader:VS,fragmentShader:FS}));bust.frustumCulled=false;scene.add(bust);
+const LU={uLight:U.uLight,uOn:{value:reduce?1:0},uSize:{value:240*dpr}},lg=new THREE.BufferGeometry();lg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(3),3));
+const lp=new THREE.Points(lg,new THREE.ShaderMaterial({...base,uniforms:LU,vertexShader:LVS,fragmentShader:LFS}));lp.frustumCulled=false;scene.add(lp);
+const dp=new Float32Array(900*3),dr=new Float32Array(900);for(let i=0;i<900;i++){dp[i*3]=-9+R()*18;dp[i*3+1]=-6+R()*12;dp[i*3+2]=-6+R()*8;dr[i]=R()}
+const dg=new THREE.BufferGeometry();dg.setAttribute('position',new THREE.BufferAttribute(dp,3));dg.setAttribute('aRand',new THREE.BufferAttribute(dr,1));
+const DU={uTime:U.uTime,uSize:{value:22*dpr},uInk:U.uInk,uOn:{value:reduce?1:0}};
+const dust=new THREE.Points(dg,new THREE.ShaderMaterial({...base,uniforms:DU,vertexShader:DVS,fragmentShader:DFS}));dust.frustumCulled=false;scene.add(dust);
+function resize(){const w=innerWidth,h=innerHeight,asp=w/h,dist=Math.max(2.35/T15,1.7/(T15*asp));
+renderer.setSize(w,h);cam.aspect=asp;cam.updateProjectionMatrix();cam.position.set(0,-.15,dist);cam.lookAt(target);
+U.uRingRadius.value=92*(2*dist*T15/h)}
+addEventListener('resize',resize);resize();
+const ptr=new THREE.Vector2(),ray=new THREE.Raycaster(),plane=new THREE.Plane(new THREE.Vector3(0,0,1),-3.6),hit=new THREE.Vector3(),head=new THREE.Vector2();
+let active=false,touch=false,lastT=0;
+const mv=e=>{ptr.set(e.clientX/innerWidth*2-1,-(e.clientY/innerHeight*2-1));active=true;touch=e.pointerType==='touch';lastT=performance.now()};
+addEventListener('pointermove',mv);addEventListener('pointerdown',mv);document.documentElement.addEventListener('pointerleave',()=>active=false);
+let last=performance.now(),t=0;
+function frame(now){requestAnimationFrame(frame);
+const dt=Math.min(.05,(now-last)/1000);last=now;t+=dt;const k=r=>1-Math.exp(-dt*r);
+const asm=reduce?1:Math.min(1,t/2.6);U.uAssemble.value=asm;U.uTime.value=reduce?0:t;
+if(asm>.55&&page.dataset.phase!=='ready')page.dataset.phase='ready';
+if(!reduce){LU.uOn.value+=(Math.min(1,1.6*asm)-LU.uOn.value)*k(4);DU.uOn.value+=(1-DU.uOn.value)*k(.8);
+if(t>2.34&&t<4.54){const s=(t-2.34)/2.2;U.uShine.value=2.6-(1-(1-s)*(1-s))*5.4}else U.uShine.value=99;
+if(t>=4.6){const c=(t-4.6)%4.2;U.uGlint.value=c<.9?d.minX-.15+(d.maxX-d.minX+.3)*(c/.9):-9}}
+const act=active&&(!touch||now-lastT<1500);let tl,th;
+if(act){ray.setFromCamera(ptr,cam);if(!ray.ray.intersectPlane(plane,hit))hit.copy(U.uLight.value);tl=hit;th=[.5*ptr.x,.18*ptr.y]}
+else{tl=new THREE.Vector3(1.9*Math.sin(.45*t),.5+.8*Math.cos(.33*t),3.6);th=[.35*Math.sin(.45*t),.12*Math.cos(.33*t)]}
+if(reduce){U.uLight.value.copy(tl);head.set(0,0)}else{U.uLight.value.lerp(tl,k(5));const hr=act?k(3):k(1.5);head.x+=(th[0]-head.x)*hr;head.y+=(th[1]-head.y)*hr}
+U.uHead.value.set(head.x,-head.y);
+renderer.render(scene,cam)}
+requestAnimationFrame(frame)}
+
+(async()=>{try{
+const g=await generate(),data=await build(g.P,g.Nn,g.M,g.LS);setProgress(1);if(!reduce)await new Promise(r=>setTimeout(r,380));start(data)
+}catch(e){console.error(e);counter.textContent='Falha ao carregar';counter.style.fontSize='18px';label.textContent='Atualize a página'}})();
+</script>
+</body>
+</html>

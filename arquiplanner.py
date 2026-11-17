@@ -65,7 +65,7 @@ st.markdown("""
 @font-face{font-family:"Geist";src:url(https://fonts.gstatic.com/s/geist/v5/gyByhwUxId8gMEwcGFU.woff2) format("woff2");font-weight:100 900;font-display:swap}
 @font-face{font-family:"Geist Mono";src:url(https://fonts.gstatic.com/s/geistmono/v6/or3nQ6H-1_WfwkMZI_qYFrcdmg.woff2) format("woff2");font-weight:100 900;font-display:swap}
 @font-face{font-family:"Instrument Serif";src:url(https://fonts.gstatic.com/s/instrumentserif/v5/jizBRFtNs2ka5fXjeivQ4LroWlx-6zUTjg.woff2) format("woff2");font-weight:400;font-display:swap}
-:root{--night:#0f110d;--paper:#f0e5c8;--dots:#c9d4b8;--tech:#7fa8a3;--muted:#7f8a6a;--surface:#151912;--surface2:#1b2016;--line:#2a3024;
+:root{--night:#0f110d;--paper:#f0e5c8;--dots:#c9d4b8;--tech:#7fa8a3;--muted:#a9b394;--surface:#151912;--surface2:#1b2016;--line:#2a3024;
 --sans:"Geist",ui-sans-serif,system-ui,sans-serif;--mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;--serif:"Instrument Serif",Georgia,serif}
 @keyframes fadeInUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 @keyframes pulseSage{0%{box-shadow:0 0 0 0 rgba(127,168,163,.45)}70%{box-shadow:0 0 0 8px rgba(127,168,163,0)}100%{box-shadow:0 0 0 0 rgba(127,168,163,0)}}
@@ -107,6 +107,19 @@ section[data-testid="stSidebar"] .stButton>button[kind="primary"] p,section[data
 .stTabs [data-baseweb="tab"]{color:var(--muted)}
 .stTabs [aria-selected="true"]{color:var(--paper)}
 iframe{border:0;border-radius:12px}
+html,body,.stApp,[data-testid="stMarkdownContainer"] p,[data-testid="stMarkdownContainer"] li{font-size:15px;line-height:1.55}
+[data-testid="stCaptionContainer"],.stCaption,small{color:var(--muted)!important;font-size:13px!important}
+div[data-baseweb="popover"],div[data-baseweb="popover"]>div,ul[data-baseweb="menu"],div[data-baseweb="calendar"],div[data-baseweb="select"]>div{background:#151912!important;color:var(--paper)!important}
+div[data-baseweb="popover"] *,ul[data-baseweb="menu"] li,div[data-baseweb="calendar"] *{color:var(--paper)!important}
+ul[data-baseweb="menu"] li:hover,li[aria-selected="true"]{background:#232a1d!important}
+div[data-baseweb="calendar"] button[aria-selected="true"]{background:var(--paper)!important;color:#111!important}
+div[data-baseweb="tooltip"] *{background:#1b2016!important;color:var(--paper)!important}
+div[data-testid="stAlert"]{background:#1b2016!important;border:1px solid var(--line)!important;border-radius:10px}
+div[data-testid="stAlert"] *{color:var(--paper)!important}
+details,[data-testid="stExpander"]{background:var(--surface)!important;border:1px solid var(--line)!important;border-radius:10px}
+[data-testid="stExpander"] summary,[data-testid="stExpander"] summary *{color:var(--paper)!important}
+::placeholder{color:#8d977a!important;opacity:1}
+[data-testid="stToast"]{background:#1b2016!important;color:var(--paper)!important}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 """, unsafe_allow_html=True)
@@ -444,7 +457,7 @@ def obter_projeto_ativo():
       <div><span class="badge-tag">{esc(proj['categoria'])}</span>
         <span class="badge-{cls_pri}" style="margin-left:6px;">Prioridade {esc(proj['prioridade'])}</span>
         <h2 style="margin:8px 0 4px 0;">{esc(proj['titulo'])}</h2>
-        <p style="color:#7f8a6a;margin:0;font-size:13px;">Cliente: <b style="color:#f0e5c8">{esc(proj['cliente'])}</b> &nbsp;|&nbsp;
+        <p style="color:#a9b394;margin:0;font-size:13px;">Cliente: <b style="color:#f0e5c8">{esc(proj['cliente'])}</b> &nbsp;|&nbsp;
         Etapa: <b style="color:#f0e5c8">{esc(proj['etapa_atual'])}</b> &nbsp;|&nbsp; Entrega: <b style="color:#f0e5c8">{esc(proj['data_fim'])}</b>
         &nbsp;|&nbsp; Honorários: <b style="color:#f0e5c8">R$ {float(proj['orcamento']):,.2f}</b></p></div>
       <div style="text-align:right;"><span class="mono-label">Checklist concluído</span>
@@ -492,7 +505,7 @@ if menu_atual == MENU_INICIO:
                 st.markdown(f"""<div class="arqui-card" style="padding:12px;{'border-left-color:#b5483a;' if venceu else ''}">
                     <span class="mono-label">{esc(p['data_fim'])}{' · VENCIDO' if venceu else ''}</span>
                     <h4 style="margin:6px 0 2px 0;">{esc(p['titulo'])}</h4>
-                    <p style="font-size:12px;color:#7f8a6a;margin:0;">{esc(p['cliente'])} — {esc(p['etapa_atual'])}</p></div>""", unsafe_allow_html=True)
+                    <p style="font-size:12px;color:#a9b394;margin:0;">{esc(p['cliente'])} — {esc(p['etapa_atual'])}</p></div>""", unsafe_allow_html=True)
         else:
             st.info("Nenhuma entrega nos próximos 7 dias.")
     with col_b:
@@ -502,7 +515,7 @@ if menu_atual == MENU_INICIO:
                 st.markdown(f"""<div class="arqui-card" style="padding:12px;">
                     <span class="mono-label">{esc(e.get('hora', ''))} · {esc(e['categoria'])}</span>
                     <h4 style="margin:6px 0 2px 0;">{esc(e['titulo'])}</h4>
-                    <p style="font-size:12px;color:#7f8a6a;margin:0;">{esc(e.get('descricao', ''))}</p></div>""", unsafe_allow_html=True)
+                    <p style="font-size:12px;color:#a9b394;margin:0;">{esc(e.get('descricao', ''))}</p></div>""", unsafe_allow_html=True)
         else:
             st.info("Nenhum compromisso para hoje.")
 
@@ -659,7 +672,7 @@ elif menu_atual == "📋 Visão Geral & Edição Completa":
                     for p in [p for p in db["projetos"] if p["etapa_atual"] == etapa_nome]:
                         st.markdown(f"""<div class="arqui-card"><span class="badge-tag">{esc(p['categoria'])}</span>
                             <h4 style="margin:8px 0 4px 0;">{esc(p['titulo'])}</h4>
-                            <p style="font-size:12px;color:#7f8a6a;margin:0;">{esc(p['cliente'])}</p>
+                            <p style="font-size:12px;color:#a9b394;margin:0;">{esc(p['cliente'])}</p>
                             <p style="font-size:11px;color:#c9d4b8;margin-top:4px;">Entrega: {esc(p['data_fim'])}</p></div>""", unsafe_allow_html=True)
                         st.button("Abrir Editor", key=f"open_k_{p['id']}", use_container_width=True,
                                   on_click=abrir_projeto, args=(p["id"],))
@@ -947,7 +960,7 @@ elif menu_atual.startswith("✨ "):
                 <div style="display:flex;justify-content:space-between;align-items:center;">
                     <h4 style="margin:0;">{esc(item['titulo'])}</h4><span class="badge-tag">{int(item['progresso'])}% concluído</span></div>
                 <p style="font-size:13px;color:#c9d4b8;margin:6px 0 4px 0;">Próximo passo: {esc(item.get('proximo_passo', '-'))}</p>
-                <p style="font-size:13px;color:#7f8a6a;margin:0;">{esc(item.get('anotacoes', ''))}</p></div>""", unsafe_allow_html=True)
+                <p style="font-size:13px;color:#a9b394;margin:0;">{esc(item.get('anotacoes', ''))}</p></div>""", unsafe_allow_html=True)
             st.progress(int(item["progresso"]) / 100)
             with st.expander(f"✏️ Editar '{item['titulo']}'"):
                 ed_t = st.text_input("Título:", value=item["titulo"], key=f"ed_ct_{item['id']}")
@@ -1052,7 +1065,7 @@ elif menu_atual == "🗓️ Agenda Google & Categorias":
             <span style="background:{esc(comp['cor'])};color:#0f110d;padding:2px 8px;border-radius:6px;font:600 11px 'Geist Mono',monospace;">{esc(comp['categoria'])}</span>
             <span class="mono-label" style="margin-left:8px;">{esc(comp['data'])} às {esc(comp['hora'])}</span>
             <h4 style="margin:6px 0 2px 0;">{esc(comp['titulo'])}</h4>
-            <p style="font-size:12px;color:#7f8a6a;margin:0;">{esc(comp['descricao'])}</p></div>""", unsafe_allow_html=True)
+            <p style="font-size:12px;color:#a9b394;margin:0;">{esc(comp['descricao'])}</p></div>""", unsafe_allow_html=True)
         c_gcal.write("")
         if ig.google_ativo():
             if c_gcal.button("📅 Enviar", key=f"gcal_{comp['id']}", use_container_width=True):
